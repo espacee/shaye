@@ -9,6 +9,9 @@ import { imageHatData } from './image-hat'
 import { imageTshirtBlackData } from './image-tshirt-black'
 import { imageTshirtWhiteData } from './image-tshirt-white'
 import { imageHero1Data } from './image-hero-1'
+import { mealsSeedData } from './meals'
+import { reviewsSeedData } from './reviews-data'
+import { siteSettingsSeedData } from './site-settings'
 import { Address, Transaction, VariantOption } from '@/payload-types'
 
 const collections: CollectionSlug[] = [
@@ -25,6 +28,7 @@ const collections: CollectionSlug[] = [
   'transactions',
   'addresses',
   'orders',
+  'reviews',
 ]
 
 const categories = ['Accessories', 'T-Shirts', 'Hats']
@@ -94,7 +98,7 @@ export const seed = async ({
         slug: global,
         data: {
           navItems: [],
-        },
+        } as any,
         depth: 0,
         context: {
           disableRevalidate: true,
@@ -572,6 +576,36 @@ export const seed = async ({
       },
     }),
   ])
+
+  payload.logger.info(`— Seeding Shaye meals...`)
+
+  for (const meal of mealsSeedData) {
+    await payload.create({
+      collection: 'products',
+      depth: 0,
+      data: {
+        ...meal,
+        _status: 'published',
+      } as any,
+    })
+  }
+
+  payload.logger.info(`— Seeding reviews...`)
+
+  for (const review of reviewsSeedData) {
+    await payload.create({
+      collection: 'reviews',
+      depth: 0,
+      data: review,
+    })
+  }
+
+  payload.logger.info(`— Seeding site settings...`)
+
+  await payload.updateGlobal({
+    slug: 'site-settings' as any,
+    data: siteSettingsSeedData as any,
+  })
 
   payload.logger.info('Seeded database successfully!')
 }

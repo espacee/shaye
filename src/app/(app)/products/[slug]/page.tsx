@@ -1,218 +1,128 @@
-import type { Media, Product } from '@/payload-types'
-
-import { RenderBlocks } from '@/blocks/RenderBlocks'
-import { GridTileImage } from '@/components/Grid/tile'
-import { Gallery } from '@/components/product/Gallery'
-import { ProductDescription } from '@/components/product/ProductDescription'
-import configPromise from '@payload-config'
+import React from 'react'
 import { getPayload } from 'payload'
-import { draftMode } from 'next/headers'
-import Link from 'next/link'
+import configPromise from '@payload-config'
 import { notFound } from 'next/navigation'
-import React, { Suspense } from 'react'
-import { Button } from '@/components/ui/button'
-import { ChevronLeftIcon } from 'lucide-react'
-import { Metadata } from 'next'
+import Link from 'next/link'
+import { ProductDetailClient } from './ProductDetail.client'
+import { PRODUCT } from '@/lib/constants'
+import type { Metadata } from 'next'
 
-type Args = {
-  params: Promise<{
-    slug: string
-  }>
+interface PageProps {
+  params: Promise<{ slug: string }>
 }
 
-export async function generateMetadata({ params }: Args): Promise<Metadata> {
+export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params
-  const product = await queryProductBySlug({ slug })
-
-  if (!product) return notFound()
-
-  const gallery = product.gallery?.filter((item) => typeof item.image === 'object') || []
-
-  const metaImage = typeof product.meta?.image === 'object' ? product.meta?.image : undefined
-  const canIndex = product._status === 'published'
-
-  const seoImage = metaImage || (gallery.length ? (gallery[0]?.image as Media) : undefined)
-
-  return {
-    description: product.meta?.description || '',
-    openGraph: seoImage?.url
-      ? {
-          images: [
-            {
-              alt: seoImage?.alt,
-              height: seoImage.height!,
-              url: seoImage?.url,
-              width: seoImage.width!,
-            },
-          ],
-        }
-      : null,
-    robots: {
-      follow: canIndex,
-      googleBot: {
-        follow: canIndex,
-        index: canIndex,
-      },
-      index: canIndex,
-    },
-    title: product.meta?.title || product.title,
-  }
-}
-
-export default async function ProductPage({ params }: Args) {
-  const { slug } = await params
-  const product = await queryProductBySlug({ slug })
-
-  if (!product) return notFound()
-
-  const gallery =
-    product.gallery
-      ?.filter((item) => typeof item.image === 'object')
-      .map((item) => ({
-        ...item,
-        image: item.image as Media,
-      })) || []
-
-  const metaImage = typeof product.meta?.image === 'object' ? product.meta?.image : undefined
-  const hasStock = product.enableVariants
-    ? product?.variants?.docs?.some((variant) => {
-        if (typeof variant !== 'object') return false
-        return variant.inventory && variant?.inventory > 0
-      })
-    : product.inventory! > 0
-
-  let price = product.priceInUSD
-
-  if (product.enableVariants && product?.variants?.docs?.length) {
-    price = product?.variants?.docs?.reduce((acc, variant) => {
-      if (typeof variant === 'object' && variant?.priceInUSD && acc && variant?.priceInUSD > acc) {
-        return variant.priceInUSD
-      }
-      return acc
-    }, price)
-  }
-
-  const productJsonLd = {
-    name: product.title,
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    description: product.description,
-    image: metaImage?.url,
-    offers: {
-      '@type': 'AggregateOffer',
-      availability: hasStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-      price: price,
-      priceCurrency: 'usd',
-    },
-  }
-
-  const relatedProducts =
-    product.relatedProducts?.filter((relatedProduct) => typeof relatedProduct === 'object') ?? []
-
-  return (
-    <React.Fragment>
-      <script
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(productJsonLd),
-        }}
-        type="application/ld+json"
-      />
-      <div className="container pt-8 pb-8">
-        <Button asChild variant="ghost" className="mb-4">
-          <Link href="/shop">
-            <ChevronLeftIcon />
-            All products
-          </Link>
-        </Button>
-        <div className="flex flex-col gap-12 rounded-lg border p-8 md:py-12 lg:flex-row lg:gap-8 bg-primary-foreground">
-          <div className="h-full w-full basis-full lg:basis-1/2">
-            <Suspense
-              fallback={
-                <div className="relative aspect-square h-full max-h-[550px] w-full overflow-hidden" />
-              }
-            >
-              {Boolean(gallery?.length) && <Gallery gallery={gallery} />}
-            </Suspense>
-          </div>
-
-          <div className="basis-full lg:basis-1/2">
-            <ProductDescription product={product} />
-          </div>
-        </div>
-      </div>
-
-      {product.layout?.length ? <RenderBlocks blocks={product.layout} /> : <></>}
-
-      {relatedProducts.length ? (
-        <div className="container">
-          <RelatedProducts products={relatedProducts as Product[]} />
-        </div>
-      ) : (
-        <></>
-      )}
-    </React.Fragment>
-  )
-}
-
-function RelatedProducts({ products }: { products: Product[] }) {
-  if (!products.length) return null
-
-  return (
-    <div className="py-8">
-      <h2 className="mb-4 text-2xl font-bold">Related Products</h2>
-      <ul className="flex w-full gap-4 overflow-x-auto pt-1">
-        {products.map((product) => (
-          <li
-            className="aspect-square w-full flex-none min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
-            key={product.id}
-          >
-            <Link className="relative h-full w-full" href={`/products/${product.slug}`}>
-              <GridTileImage
-                label={{
-                  amount: product.priceInUSD!,
-                  title: product.title,
-                }}
-                media={product.meta?.image as Media}
-              />
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
-
-const queryProductBySlug = async ({ slug }: { slug: string }) => {
-  const { isEnabled: draft } = await draftMode()
-
   const payload = await getPayload({ config: configPromise })
 
   const result = await payload.find({
     collection: 'products',
-    depth: 3,
-    draft,
+    where: { slug: { equals: slug } },
     limit: 1,
-    overrideAccess: draft,
-    pagination: false,
-    where: {
-      and: [
-        {
-          slug: {
-            equals: slug,
-          },
-        },
-        ...(draft ? [] : [{ _status: { equals: 'published' } }]),
-      ],
-    },
-    populate: {
-      variants: {
-        title: true,
-        priceInUSD: true,
-        inventory: true,
-        options: true,
-      },
-    },
   })
 
-  return result.docs?.[0] || null
+  const product = result.docs[0] as any
+  if (!product) return notFound()
+
+  // Fetch related products by same tag
+  let related: any[] = []
+  try {
+    const relatedResult = await payload.find({
+      collection: 'products',
+      where: {
+        and: [
+          { id: { not_equals: product.id } },
+          ...(product.tag ? [{ tag: { equals: product.tag } }] : []),
+        ],
+      },
+      limit: 3,
+    })
+    related = relatedResult.docs
+  } catch {}
+
+  return (
+    <div className="bg-background">
+      {/* Breadcrumb */}
+      <div className="px-4 sm:px-9 py-4 text-[13px] text-sub">
+        <Link href="/" className="text-primary hover:underline">Home</Link>
+        {' / '}
+        <Link href="/#menu" className="text-primary hover:underline">Menu</Link>
+        {' / '}
+        <span>{product.title}</span>
+      </div>
+
+      {/* Product detail */}
+      <div className="px-4 sm:px-9 pb-12 grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+        {/* Image */}
+        <div className="bg-gradient-to-br from-[var(--gradient-from)] to-[var(--gradient-to)] rounded-[20px] aspect-square flex items-center justify-center text-[120px] relative">
+          {product.emoji || '\uD83C\uDF7D\uFE0F'}
+          {product.tag && (
+            <div className="absolute top-4 left-4 px-3.5 py-1 bg-white/[0.92] rounded-lg text-xs font-bold text-primary uppercase">
+              {product.tag}
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        <ProductDetailClient product={{
+          id: product.id,
+          title: product.title,
+          emoji: product.emoji,
+          tag: product.tag,
+          priceInUSD: product.priceInUSD,
+          calories: product.calories,
+          protein: product.protein,
+          carbs: product.carbs,
+          fat: product.fat,
+          ingredients: product.ingredients,
+          allergens: product.allergens,
+          storage_instructions: product.storage_instructions,
+          halal: product.halal,
+        }} />
+      </div>
+
+      {/* Related products */}
+      {related.length > 0 && (
+        <div className="px-4 sm:px-9 pb-12">
+          <h2 className="font-heading text-[22px] font-bold mb-4">{PRODUCT.related}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {related.map((m: any) => (
+              <div key={m.id} className="bg-card border border-border rounded-card overflow-hidden cursor-pointer">
+                <Link href={`/products/${m.slug}`}>
+                  <div className="h-[100px] bg-gradient-to-br from-[var(--gradient-from)] to-[var(--gradient-to)] flex items-center justify-center text-4xl">
+                    {m.emoji || '\uD83C\uDF7D\uFE0F'}
+                  </div>
+                  <div className="p-3.5">
+                    <div className="font-heading font-bold text-sm mb-1">{m.title}</div>
+                    <div className="text-[11px] text-sub mb-2">{m.calories || 0} kcal &middot; {m.protein || 0}g eiwit</div>
+                    <div className="font-heading font-bold text-primary">&euro;{((m.priceInUSD || 0)).toFixed(2).replace('.', ',')}</div>
+                  </div>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params
+  try {
+    const payload = await getPayload({ config: configPromise })
+    const result = await payload.find({
+      collection: 'products',
+      where: { slug: { equals: slug } },
+      limit: 1,
+    })
+    const product = result.docs[0]
+    if (product) {
+      return {
+        title: `${product.title} | Shaye`,
+        description: `${product.title} - Halal meal prep van Shaye`,
+      }
+    }
+  } catch {}
+  return { title: 'Product | Shaye' }
 }

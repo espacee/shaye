@@ -52,6 +52,16 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     priceInUSD: true,
     inventory: true,
     meta: true,
+    emoji: true,
+    tag: true,
+    calories: true,
+    protein: true,
+    carbs: true,
+    fat: true,
+    ingredients: true,
+    allergens: true,
+    halal: true,
+    featured: true,
   },
   fields: [
     { name: 'title', type: 'text', required: true },
@@ -167,6 +177,70 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
             },
           ],
           label: 'Product Details',
+        },
+        {
+          label: 'Meal Details',
+          fields: [
+            {
+              name: 'emoji',
+              type: 'text',
+              admin: { description: 'Emoji for the meal card (e.g. \u{1F357})' },
+            },
+            {
+              name: 'tag',
+              type: 'select',
+              options: [
+                { label: 'Afvallen', value: 'Afvallen' },
+                { label: 'Spiermassa', value: 'Spiermassa' },
+                { label: 'Droogtrainen', value: 'Droogtrainen' },
+                { label: 'Aankomen', value: 'Aankomen' },
+              ],
+            },
+            {
+              name: 'calories',
+              type: 'number',
+            },
+            {
+              name: 'protein',
+              type: 'number',
+            },
+            {
+              name: 'carbs',
+              type: 'number',
+            },
+            {
+              name: 'fat',
+              type: 'number',
+            },
+            {
+              name: 'ingredients',
+              type: 'textarea',
+            },
+            {
+              name: 'allergens',
+              type: 'text',
+            },
+            {
+              name: 'storage_instructions',
+              type: 'textarea',
+              defaultValue: 'Bewaar in de koelkast (max 2-3 dagen) of vries direct in na ontvangst (houdbaar tot 3 maanden). Opwarmen: 3 minuten in de magnetron op 700W.',
+            },
+            {
+              name: 'halal',
+              type: 'checkbox',
+              defaultValue: true,
+            },
+            {
+              name: 'featured',
+              type: 'checkbox',
+              defaultValue: false,
+            },
+            {
+              name: 'sort_order',
+              type: 'number',
+              defaultValue: 0,
+            },
+          ],
         },
         {
           name: 'meta',
