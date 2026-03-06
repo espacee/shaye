@@ -30,7 +30,7 @@ export async function sendOrderAccessEmail({
       depth: 0,
     })
 
-    const order = orders[0]
+    const order = orders[0] as (typeof orders)[0] & { accessToken?: string }
 
     if (!order || !order.accessToken) {
       return { success: true }
