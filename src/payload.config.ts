@@ -1,4 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { migrations } from './migrations'
 import sharp from 'sharp'
 
 import {
@@ -43,6 +44,7 @@ export default buildConfig({
   },
   collections: [Users, Pages, Categories, Media, Reviews],
   db: postgresAdapter({
+    prodMigrations: migrations,
     pool: {
       connectionString: process.env.DATABASE_URL || '',
     },
