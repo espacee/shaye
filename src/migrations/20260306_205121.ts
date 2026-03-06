@@ -40,12 +40,14 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE TYPE "public"."enum_products_blocks_content_columns_size" AS ENUM('oneThird', 'half', 'twoThirds', 'full');
   CREATE TYPE "public"."enum_products_blocks_content_columns_link_type" AS ENUM('reference', 'custom');
   CREATE TYPE "public"."enum_products_blocks_content_columns_link_appearance" AS ENUM('default', 'outline');
+  CREATE TYPE "public"."enum_products_tag" AS ENUM('Afvallen', 'Spiermassa', 'Droogtrainen', 'Aankomen');
   CREATE TYPE "public"."enum_products_status" AS ENUM('draft', 'published');
   CREATE TYPE "public"."enum__products_v_blocks_cta_links_link_type" AS ENUM('reference', 'custom');
   CREATE TYPE "public"."enum__products_v_blocks_cta_links_link_appearance" AS ENUM('default', 'outline');
   CREATE TYPE "public"."enum__products_v_blocks_content_columns_size" AS ENUM('oneThird', 'half', 'twoThirds', 'full');
   CREATE TYPE "public"."enum__products_v_blocks_content_columns_link_type" AS ENUM('reference', 'custom');
   CREATE TYPE "public"."enum__products_v_blocks_content_columns_link_appearance" AS ENUM('default', 'outline');
+  CREATE TYPE "public"."enum__products_v_version_tag" AS ENUM('Afvallen', 'Spiermassa', 'Droogtrainen', 'Aankomen');
   CREATE TYPE "public"."enum__products_v_version_status" AS ENUM('draft', 'published');
   CREATE TYPE "public"."enum_carts_currency" AS ENUM('USD');
   CREATE TYPE "public"."enum_orders_status" AS ENUM('processing', 'completed', 'cancelled', 'refunded');
@@ -410,6 +412,18 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"focal_y" numeric
   );
   
+  CREATE TABLE "reviews" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"name" varchar NOT NULL,
+  	"location" varchar NOT NULL,
+  	"text" varchar NOT NULL,
+  	"stars" numeric DEFAULT 5 NOT NULL,
+  	"weeks_as_customer" varchar,
+  	"featured" boolean DEFAULT false,
+  	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
+  );
+  
   CREATE TABLE "forms_blocks_checkbox" (
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
@@ -720,6 +734,18 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"enable_variants" boolean,
   	"price_in_u_s_d_enabled" boolean,
   	"price_in_u_s_d" numeric,
+  	"emoji" varchar,
+  	"tag" "enum_products_tag",
+  	"calories" numeric,
+  	"protein" numeric,
+  	"carbs" numeric,
+  	"fat" numeric,
+  	"ingredients" varchar,
+  	"allergens" varchar,
+  	"storage_instructions" varchar DEFAULT 'Bewaar in de koelkast (max 2-3 dagen) of vries direct in na ontvangst (houdbaar tot 3 maanden). Opwarmen: 3 minuten in de magnetron op 700W.',
+  	"halal" boolean DEFAULT true,
+  	"featured" boolean DEFAULT false,
+  	"sort_order" numeric DEFAULT 0,
   	"meta_title" varchar,
   	"meta_image_id" integer,
   	"meta_description" varchar,
@@ -816,6 +842,18 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"version_enable_variants" boolean,
   	"version_price_in_u_s_d_enabled" boolean,
   	"version_price_in_u_s_d" numeric,
+  	"version_emoji" varchar,
+  	"version_tag" "enum__products_v_version_tag",
+  	"version_calories" numeric,
+  	"version_protein" numeric,
+  	"version_carbs" numeric,
+  	"version_fat" numeric,
+  	"version_ingredients" varchar,
+  	"version_allergens" varchar,
+  	"version_storage_instructions" varchar DEFAULT 'Bewaar in de koelkast (max 2-3 dagen) of vries direct in na ontvangst (houdbaar tot 3 maanden). Opwarmen: 3 minuten in de magnetron op 700W.',
+  	"version_halal" boolean DEFAULT true,
+  	"version_featured" boolean DEFAULT false,
+  	"version_sort_order" numeric DEFAULT 0,
   	"version_meta_title" varchar,
   	"version_meta_image_id" integer,
   	"version_meta_description" varchar,
@@ -960,6 +998,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"pages_id" integer,
   	"categories_id" integer,
   	"media_id" integer,
+  	"reviews_id" integer,
   	"forms_id" integer,
   	"form_submissions_id" integer,
   	"addresses_id" integer,
@@ -1042,6 +1081,28 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"parent_id" integer NOT NULL,
   	"path" varchar NOT NULL,
   	"pages_id" integer
+  );
+  
+  CREATE TABLE "site_settings_stats" (
+  	"_order" integer NOT NULL,
+  	"_parent_id" integer NOT NULL,
+  	"id" varchar PRIMARY KEY NOT NULL,
+  	"value" varchar NOT NULL,
+  	"label" varchar NOT NULL
+  );
+  
+  CREATE TABLE "site_settings" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"promo_bar_text" varchar DEFAULT '15% korting op je eerste bestelling met code SHAYE15 · Gratis levering vanaf €35',
+  	"promo_bar_active" boolean DEFAULT true,
+  	"hero_title" varchar DEFAULT '500+ klanten vertrouwen op Shaye.',
+  	"hero_subtitle" varchar DEFAULT 'Verse sportmaaltijden, elke dag bereid in onze keuken. Gekoeld aan je deur, klaar in 3 minuten.',
+  	"discount_code" varchar DEFAULT 'SHAYE15',
+  	"discount_percentage" numeric DEFAULT 15,
+  	"free_shipping_threshold" numeric DEFAULT 35,
+  	"shipping_cost" numeric DEFAULT 5.95,
+  	"updated_at" timestamp(3) with time zone,
+  	"created_at" timestamp(3) with time zone
   );
   
   ALTER TABLE "users_roles" ADD CONSTRAINT "users_roles_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
@@ -1159,6 +1220,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_pages_fk" FOREIGN KEY ("pages_id") REFERENCES "public"."pages"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_categories_fk" FOREIGN KEY ("categories_id") REFERENCES "public"."categories"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_media_fk" FOREIGN KEY ("media_id") REFERENCES "public"."media"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_reviews_fk" FOREIGN KEY ("reviews_id") REFERENCES "public"."reviews"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_forms_fk" FOREIGN KEY ("forms_id") REFERENCES "public"."forms"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_form_submissions_fk" FOREIGN KEY ("form_submissions_id") REFERENCES "public"."form_submissions"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_addresses_fk" FOREIGN KEY ("addresses_id") REFERENCES "public"."addresses"("id") ON DELETE cascade ON UPDATE no action;
@@ -1177,6 +1239,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "footer_nav_items" ADD CONSTRAINT "footer_nav_items_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."footer"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "footer_rels" ADD CONSTRAINT "footer_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."footer"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "footer_rels" ADD CONSTRAINT "footer_rels_pages_fk" FOREIGN KEY ("pages_id") REFERENCES "public"."pages"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "site_settings_stats" ADD CONSTRAINT "site_settings_stats_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."site_settings"("id") ON DELETE cascade ON UPDATE no action;
   CREATE INDEX "users_roles_order_idx" ON "users_roles" USING btree ("order");
   CREATE INDEX "users_roles_parent_idx" ON "users_roles" USING btree ("parent_id");
   CREATE INDEX "users_sessions_order_idx" ON "users_sessions" USING btree ("_order");
@@ -1283,6 +1346,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "media_updated_at_idx" ON "media" USING btree ("updated_at");
   CREATE INDEX "media_created_at_idx" ON "media" USING btree ("created_at");
   CREATE UNIQUE INDEX "media_filename_idx" ON "media" USING btree ("filename");
+  CREATE INDEX "reviews_updated_at_idx" ON "reviews" USING btree ("updated_at");
+  CREATE INDEX "reviews_created_at_idx" ON "reviews" USING btree ("created_at");
   CREATE INDEX "forms_blocks_checkbox_order_idx" ON "forms_blocks_checkbox" USING btree ("_order");
   CREATE INDEX "forms_blocks_checkbox_parent_id_idx" ON "forms_blocks_checkbox" USING btree ("_parent_id");
   CREATE INDEX "forms_blocks_checkbox_path_idx" ON "forms_blocks_checkbox" USING btree ("_path");
@@ -1462,6 +1527,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "payload_locked_documents_rels_pages_id_idx" ON "payload_locked_documents_rels" USING btree ("pages_id");
   CREATE INDEX "payload_locked_documents_rels_categories_id_idx" ON "payload_locked_documents_rels" USING btree ("categories_id");
   CREATE INDEX "payload_locked_documents_rels_media_id_idx" ON "payload_locked_documents_rels" USING btree ("media_id");
+  CREATE INDEX "payload_locked_documents_rels_reviews_id_idx" ON "payload_locked_documents_rels" USING btree ("reviews_id");
   CREATE INDEX "payload_locked_documents_rels_forms_id_idx" ON "payload_locked_documents_rels" USING btree ("forms_id");
   CREATE INDEX "payload_locked_documents_rels_form_submissions_id_idx" ON "payload_locked_documents_rels" USING btree ("form_submissions_id");
   CREATE INDEX "payload_locked_documents_rels_addresses_id_idx" ON "payload_locked_documents_rels" USING btree ("addresses_id");
@@ -1492,7 +1558,9 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "footer_rels_order_idx" ON "footer_rels" USING btree ("order");
   CREATE INDEX "footer_rels_parent_idx" ON "footer_rels" USING btree ("parent_id");
   CREATE INDEX "footer_rels_path_idx" ON "footer_rels" USING btree ("path");
-  CREATE INDEX "footer_rels_pages_id_idx" ON "footer_rels" USING btree ("pages_id");`)
+  CREATE INDEX "footer_rels_pages_id_idx" ON "footer_rels" USING btree ("pages_id");
+  CREATE INDEX "site_settings_stats_order_idx" ON "site_settings_stats" USING btree ("_order");
+  CREATE INDEX "site_settings_stats_parent_id_idx" ON "site_settings_stats" USING btree ("_parent_id");`)
 }
 
 export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
@@ -1528,6 +1596,7 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE "_pages_v_rels" CASCADE;
   DROP TABLE "categories" CASCADE;
   DROP TABLE "media" CASCADE;
+  DROP TABLE "reviews" CASCADE;
   DROP TABLE "forms_blocks_checkbox" CASCADE;
   DROP TABLE "forms_blocks_country" CASCADE;
   DROP TABLE "forms_blocks_email" CASCADE;
@@ -1584,6 +1653,8 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE "footer_nav_items" CASCADE;
   DROP TABLE "footer" CASCADE;
   DROP TABLE "footer_rels" CASCADE;
+  DROP TABLE "site_settings_stats" CASCADE;
+  DROP TABLE "site_settings" CASCADE;
   DROP TYPE "public"."enum_users_roles";
   DROP TYPE "public"."enum_pages_hero_links_link_type";
   DROP TYPE "public"."enum_pages_hero_links_link_appearance";
@@ -1622,12 +1693,14 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TYPE "public"."enum_products_blocks_content_columns_size";
   DROP TYPE "public"."enum_products_blocks_content_columns_link_type";
   DROP TYPE "public"."enum_products_blocks_content_columns_link_appearance";
+  DROP TYPE "public"."enum_products_tag";
   DROP TYPE "public"."enum_products_status";
   DROP TYPE "public"."enum__products_v_blocks_cta_links_link_type";
   DROP TYPE "public"."enum__products_v_blocks_cta_links_link_appearance";
   DROP TYPE "public"."enum__products_v_blocks_content_columns_size";
   DROP TYPE "public"."enum__products_v_blocks_content_columns_link_type";
   DROP TYPE "public"."enum__products_v_blocks_content_columns_link_appearance";
+  DROP TYPE "public"."enum__products_v_version_tag";
   DROP TYPE "public"."enum__products_v_version_status";
   DROP TYPE "public"."enum_carts_currency";
   DROP TYPE "public"."enum_orders_status";
