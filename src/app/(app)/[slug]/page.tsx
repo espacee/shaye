@@ -42,7 +42,7 @@ type Args = {
   }>
 }
 
-export default async function Page({ params }: Args) {
+export default async function SlugPage({ params }: Args) {
   const { slug = 'home' } = await params
   const url = '/' + slug
 
