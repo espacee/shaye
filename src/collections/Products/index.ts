@@ -19,9 +19,15 @@ import {
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
 import { DefaultDocumentIDType, Where } from 'payload'
+import { revalidateProduct, revalidateProductDelete } from './hooks/revalidateProduct'
 
 export const ProductsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
+  hooks: {
+    ...defaultCollection?.hooks,
+    afterChange: [...(defaultCollection?.hooks?.afterChange || []), revalidateProduct],
+    afterDelete: [...(defaultCollection?.hooks?.afterDelete || []), revalidateProductDelete],
+  },
   admin: {
     ...defaultCollection?.admin,
     defaultColumns: ['title', 'enableVariants', '_status', 'variants.variants'],
