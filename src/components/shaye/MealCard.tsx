@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { MacroPills } from './MacroPills'
 import { formatEUR } from '@/lib/utils'
@@ -30,6 +31,7 @@ export function MealCard({
   carbs,
   fat,
   price,
+  imageUrl,
   onAdd,
 }: MealCardProps) {
   const [added, setAdded] = useState(false)
@@ -46,11 +48,21 @@ export function MealCard({
     <div className="bg-card border border-border rounded-card overflow-hidden">
       <Link
         href={`/products/${slug}`}
-        className="block h-[130px] bg-gradient-to-br from-[var(--gradient-from)] to-[var(--gradient-to)] flex items-center justify-center text-5xl relative"
+        className="block h-[130px] bg-gradient-to-br from-[var(--gradient-from)] to-[var(--gradient-to)] flex items-center justify-center text-5xl relative overflow-hidden"
       >
-        {emoji || '🍽️'}
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
+        ) : (
+          emoji || '🍽️'
+        )}
         {tag && (
-          <span className="absolute top-2 left-2 px-2.5 py-0.5 bg-white/[0.92] rounded-md text-[10px] font-bold text-primary uppercase">
+          <span className="absolute top-2 left-2 px-2.5 py-0.5 bg-white/[0.92] rounded-md text-[10px] font-bold text-primary uppercase z-10">
             {tag}
           </span>
         )}

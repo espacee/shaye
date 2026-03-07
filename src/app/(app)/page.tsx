@@ -53,6 +53,7 @@ export default async function HomePage() {
       carbs: doc.carbs,
       fat: doc.fat,
       priceInUSD: doc.priceInUSD,
+      imageUrl: doc.gallery?.[0]?.image?.url || null,
     }))
 
     try {

@@ -17,6 +17,7 @@ interface Meal {
   carbs?: number
   fat?: number
   priceInUSD?: number
+  imageUrl?: string | null
 }
 
 export function HomepageClient({ meals }: { meals: Meal[] }) {
@@ -48,6 +49,7 @@ export function HomepageClient({ meals }: { meals: Meal[] }) {
             carbs={meal.carbs || 0}
             fat={meal.fat || 0}
             price={meal.priceInUSD || 0}
+            imageUrl={meal.imageUrl || undefined}
             onAdd={() => {
               cart.addItem({ product: typeof meal.id === 'number' ? meal.id : Number(meal.id) })
             }}

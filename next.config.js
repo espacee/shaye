@@ -16,6 +16,10 @@ const nextConfig = {
           protocol: url.protocol.replace(':', ''),
         }
       }),
+      {
+        hostname: '*.public.blob.vercel-storage.com',
+        protocol: 'https',
+      },
     ],
   },
   reactStrictMode: true,
