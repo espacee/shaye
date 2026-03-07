@@ -26,11 +26,14 @@ import { Header } from '@/globals/Header'
 import { Reviews } from '@/collections/Reviews'
 import { SiteSettings } from '@/globals/SiteSettings'
 import { plugins } from './plugins'
+import { getServerSideURL } from './utilities/getURL'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
+  serverURL: getServerSideURL(),
+  cors: [getServerSideURL()].filter(Boolean),
   admin: {
     components: {
       // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
