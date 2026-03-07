@@ -112,16 +112,16 @@ export default async function HomePage() {
           <SocialProof />
         </div>
 
-        {/* Video placeholder */}
-        <div className="bg-gradient-to-br from-[var(--gradient-from)] to-[var(--gradient-to)] rounded-[20px] overflow-hidden aspect-[9/14] max-h-[480px] relative border border-border shadow-[0_8px_40px_rgba(148,64,88,0.10)]">
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-foreground/15">
-            <div className="w-16 h-16 rounded-full bg-white/[0.92] flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.12)] cursor-pointer mb-3.5">
-              <div className="w-0 h-0 border-t-[12px] border-t-transparent border-b-[12px] border-b-transparent border-l-[20px] border-l-primary ml-1" />
-            </div>
-            <div className="text-white text-sm font-semibold drop-shadow-[0_1px_8px_rgba(0,0,0,0.3)]">
-              {HERO.videoLabel}
-            </div>
-          </div>
+        {/* Hero Video */}
+        <div className="rounded-[20px] overflow-hidden aspect-[9/14] max-h-[480px] relative border border-border shadow-[0_8px_40px_rgba(148,64,88,0.10)]">
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+            src="/shaye-hero-video.mp4"
+          />
           <div className="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-foreground/60 to-transparent">
             <div className="flex gap-2">
               {['100% Halal', 'Dagvers', 'Boortmeerbeek'].map((t) => (
@@ -138,9 +138,6 @@ export default async function HomePage() {
             <span className="text-[#F5A623] text-xs">&#9733;</span>
             <span className="text-xs font-bold">{HERO.rating}</span>
           </div>
-          <div className="absolute top-1/4 left-1/5 text-5xl opacity-60">&#127831;</div>
-          <div className="absolute top-[40%] right-[15%] text-[40px] opacity-50">&#129369;</div>
-          <div className="absolute top-[55%] left-[30%] text-4xl opacity-40">&#129367;</div>
         </div>
       </div>
 
