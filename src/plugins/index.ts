@@ -32,7 +32,7 @@ export const plugins: Plugin[] = [
     collections: {
       media: true,
     },
-    token: process.env.BLOB_READ_WRITE_TOKEN || '',
+    token: process.env.BLOB_PUBLIC_READ_WRITE_TOKEN || process.env.BLOB_READ_WRITE_TOKEN || '',
   }),
   seoPlugin({
     generateTitle,
