@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import { notFound } from 'next/navigation'
@@ -54,10 +55,21 @@ export default async function ProductPage({ params }: PageProps) {
       {/* Product detail */}
       <div className="px-4 sm:px-9 pb-12 grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
         {/* Image */}
-        <div className="bg-gradient-to-br from-[var(--gradient-from)] to-[var(--gradient-to)] rounded-[20px] aspect-square flex items-center justify-center text-[120px] relative">
-          {product.emoji || '\uD83C\uDF7D\uFE0F'}
+        <div className="bg-gradient-to-br from-[var(--gradient-from)] to-[var(--gradient-to)] rounded-[20px] aspect-square flex items-center justify-center text-[120px] relative overflow-hidden">
+          {product.gallery?.[0]?.image?.url ? (
+            <Image
+              src={product.gallery[0].image.url}
+              alt={product.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              priority
+            />
+          ) : (
+            product.emoji || '\uD83C\uDF7D\uFE0F'
+          )}
           {product.tag && (
-            <div className="absolute top-4 left-4 px-3.5 py-1 bg-white/[0.92] rounded-lg text-xs font-bold text-primary uppercase">
+            <div className="absolute top-4 left-4 px-3.5 py-1 bg-white/[0.92] rounded-lg text-xs font-bold text-primary uppercase z-10">
               {product.tag}
             </div>
           )}
@@ -89,8 +101,18 @@ export default async function ProductPage({ params }: PageProps) {
             {related.map((m: any) => (
               <div key={m.id} className="bg-card border border-border rounded-card overflow-hidden cursor-pointer">
                 <Link href={`/products/${m.slug}`}>
-                  <div className="h-[100px] bg-gradient-to-br from-[var(--gradient-from)] to-[var(--gradient-to)] flex items-center justify-center text-4xl">
-                    {m.emoji || '\uD83C\uDF7D\uFE0F'}
+                  <div className="h-[100px] bg-gradient-to-br from-[var(--gradient-from)] to-[var(--gradient-to)] flex items-center justify-center text-4xl relative overflow-hidden">
+                    {m.gallery?.[0]?.image?.url ? (
+                      <Image
+                        src={m.gallery[0].image.url}
+                        alt={m.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      />
+                    ) : (
+                      m.emoji || '\uD83C\uDF7D\uFE0F'
+                    )}
                   </div>
                   <div className="p-3.5">
                     <div className="font-heading font-bold text-sm mb-1">{m.title}</div>
