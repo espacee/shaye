@@ -48,7 +48,7 @@ export function MealCard({
     <div className="bg-card border border-border rounded-card overflow-hidden">
       <Link
         href={`/products/${slug}`}
-        className="block h-[130px] bg-gradient-to-br from-[var(--gradient-from)] to-[var(--gradient-to)] flex items-center justify-center text-5xl relative overflow-hidden"
+        className={`block ${imageUrl ? 'aspect-[4/3]' : 'h-[130px]'} bg-gradient-to-br from-[var(--gradient-from)] to-[var(--gradient-to)] flex items-center justify-center text-5xl relative overflow-hidden`}
       >
         {imageUrl ? (
           <Image
